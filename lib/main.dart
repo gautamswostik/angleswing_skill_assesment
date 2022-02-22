@@ -1,24 +1,18 @@
-import 'package:angleswing_skill_assesment/presentation/home_screen.dart';
+import 'package:angleswing_skill_assesment/app_setup/app.dart';
+import 'package:angleswing_skill_assesment/app_setup/bloc_observer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
-  runApp(const MyApp());
-}
+  WidgetsFlutterBinding.ensureInitialized();
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        appBarTheme: const AppBarTheme(
-          color: Colors.deepPurple,
-          elevation: 0.0,
-        ),
-      ),
-      home: const HomeScreen(),
-    );
-  }
+  BlocOverrides.runZoned(
+    () {
+      runApp(
+        const App(),
+      );
+      BlocOverrides.current;
+    },
+    blocObserver: AppBlocObserver(),
+  );
 }

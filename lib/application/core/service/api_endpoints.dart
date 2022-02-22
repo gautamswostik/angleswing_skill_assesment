@@ -12,6 +12,5 @@ class MapUrl {
 }
 
 class LocationUrl {
-  static const String mapdatas =
-      'https://angelswing-frontend-test-serverless-api.vercel.app/api/locations';
+  static const String mapdatas = '/api/locations';
 }
