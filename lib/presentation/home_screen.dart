@@ -14,24 +14,40 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       GlobalKey<ScaffoldState>();
-  double currentZoom = 13.0;
+
   MapController mapController = MapController();
-  LatLng currentCenter = LatLng(51.5, -0.09);
+  double currentZoom = 16.0;
+  LatLng currentCenter = LatLng(37.56682245821738, 126.9778163539802);
   bool isOpen = false;
   void _zoomOut() {
-    currentZoom = currentZoom - 1;
-    mapController.move(currentCenter, currentZoom);
+    if (currentZoom == 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You cannot zoom out any further'),
+        ),
+      );
+    } else {
+      currentZoom = currentZoom - 1;
+      mapController.move(currentCenter, currentZoom);
+    }
   }
 
   void _zoomIn() {
-    currentZoom = currentZoom + 1;
-    mapController.move(currentCenter, currentZoom);
+    if (currentZoom == 18) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You cannot zoom in any further'),
+        ),
+      );
+    } else {
+      currentZoom = currentZoom + 1;
+      mapController.move(currentCenter, currentZoom);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text("MAP Demo"),
         leading: IconButton(
@@ -53,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
               : const Icon(Icons.menu),
         ),
       ),
-
       primary: true,
       body: Scaffold(
         key: _drawerscaffoldkey,
@@ -66,7 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const SizedBox(width: 56),
             FloatingActionButton(
-              onPressed: () {},
+              onPressed: () {
+                _zoomOut();
+              },
               child: const Icon(Icons.gps_fixed),
             ),
             FloatingActionButton(
@@ -82,7 +99,10 @@ class _HomeScreenState extends State<HomeScreen> {
           options: MapOptions(
             controller: mapController,
             center: LatLng(37.56682245821738, 126.9778163539802),
-            zoom: 16,
+            zoom: currentZoom,
+            enableScrollWheel: true,
+            maxZoom: 18,
+            minZoom: 6,
           ),
           layers: [
             TileLayerOptions(
@@ -92,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'id': MapUrl.id,
               },
             ),
+            MarkerLayerOptions(markers: []),
           ],
         ),
       ),
