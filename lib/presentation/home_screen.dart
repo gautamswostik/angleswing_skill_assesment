@@ -148,6 +148,7 @@ class HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     required LatLng destLocation,
     required double destZoom,
   }) {
+    permissionHandler();
     final _latTween = Tween<double>(
         begin: mapController.center.latitude, end: destLocation.latitude);
     final _lngTween = Tween<double>(
@@ -164,6 +165,9 @@ class HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       mapController.move(
           LatLng(_latTween.evaluate(animation), _lngTween.evaluate(animation)),
           _zoomTween.evaluate(animation));
+      currentCenter =
+          LatLng(_latTween.evaluate(animation), _lngTween.evaluate(animation));
+      currentZoom = _zoomTween.evaluate(animation);
     });
 
     animation.addStatusListener((status) {
