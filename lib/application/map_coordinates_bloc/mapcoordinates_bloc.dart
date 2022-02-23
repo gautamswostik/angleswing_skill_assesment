@@ -1,5 +1,4 @@
 import 'package:angleswing_skill_assesment/application/core/entities/failure.dart';
-import 'package:angleswing_skill_assesment/infrastructure/entites/map_coorinates_data.dart';
 import 'package:angleswing_skill_assesment/infrastructure/map_coordinates_repo.dart';
 import 'package:bloc/bloc.dart';
 
@@ -19,7 +18,23 @@ class MapcoordinatesBloc
       final coordinatesCollection = await _cordinatesRepo.getMapCoordinates();
       emit(
         coordinatesCollection.fold(
-          (l) => MappCoordinatesLoaded(mapCoordinates: l),
+          (l) => MappCoordinatesLoaded(
+              mapCoordinates: l.locations, index: l.locations.length),
+          (r) => CoordinatesError(r),
+        ),
+      );
+    });
+    on<AddMapCoordinate>((event, emit) async {
+      final coordinatesCollection = await _cordinatesRepo.getMapCoordinates();
+      emit(
+        coordinatesCollection.fold(
+          (l) {
+            List<List<double>> list = [...l.locations, event.coordinates];
+            return MappCoordinatesLoaded(
+              mapCoordinates: list,
+              index: l.locations.length,
+            );
+          },
           (r) => CoordinatesError(r),
         ),
       );

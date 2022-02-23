@@ -12,9 +12,10 @@ class MapcoordinatesInitial extends MapcoordinatesState {}
 class MapcoordinatesLoading extends MapcoordinatesState {}
 
 class MappCoordinatesLoaded extends MapcoordinatesState {
-  final MapCoordinatesCollection mapCoordinates;
-
-  const MappCoordinatesLoaded({required this.mapCoordinates});
+  final List<List<double>> mapCoordinates;
+  final int index;
+  const MappCoordinatesLoaded(
+      {required this.mapCoordinates, required this.index});
 
   @override
   List<Object> get props => [mapCoordinates];
@@ -28,5 +29,3 @@ class CoordinatesError extends MapcoordinatesState {
   @override
   List<Object> get props => [failure];
 }
-
-

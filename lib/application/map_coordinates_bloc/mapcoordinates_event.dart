@@ -8,3 +8,12 @@ abstract class MapcoordinatesEvent extends Equatable {
 }
 
 class GetMapCoodinates extends MapcoordinatesEvent {}
+
+class AddMapCoordinate extends MapcoordinatesEvent {
+  final List<double> coordinates;
+
+  const AddMapCoordinate({required this.coordinates});
+
+  @override
+  List<Object> get props => [coordinates];
+}
