@@ -28,3 +28,5 @@ class CoordinatesError extends MapcoordinatesState {
   @override
   List<Object> get props => [failure];
 }
+
+

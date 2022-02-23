@@ -2,6 +2,7 @@ import 'package:angleswing_skill_assesment/application/core/entities/failure.dar
 import 'package:angleswing_skill_assesment/infrastructure/entites/map_coorinates_data.dart';
 import 'package:angleswing_skill_assesment/infrastructure/map_coordinates_repo.dart';
 import 'package:bloc/bloc.dart';
+
 import 'package:equatable/equatable.dart';
 
 part 'mapcoordinates_event.dart';

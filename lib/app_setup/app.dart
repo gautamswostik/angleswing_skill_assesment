@@ -1,7 +1,9 @@
+import 'package:angleswing_skill_assesment/application/is_pressed/ispressed_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:angleswing_skill_assesment/application/map_coordinates_bloc/mapcoordinates_bloc.dart';
 import 'package:angleswing_skill_assesment/presentation/home_screen.dart';
+import 'package:location/location.dart';
 
 class App extends StatefulWidget {
   const App({
@@ -20,6 +22,9 @@ class _AppState extends State<App> {
         BlocProvider<MapcoordinatesBloc>(
           create: (context) => MapcoordinatesBloc(),
         ),
+        BlocProvider<IspressedBloc>(
+          create: (context) => IspressedBloc(),
+        )
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -29,7 +34,7 @@ class _AppState extends State<App> {
             elevation: 0.0,
           ),
         ),
-        home: const HomeScreen(),
+        home: HomeScreen(),
       ),
     );
   }

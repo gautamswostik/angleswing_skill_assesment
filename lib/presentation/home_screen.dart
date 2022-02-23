@@ -1,23 +1,38 @@
 import 'package:angleswing_skill_assesment/application/core/service/api_endpoints.dart';
+import 'package:angleswing_skill_assesment/application/is_pressed/ispressed_bloc.dart';
+import 'package:angleswing_skill_assesment/application/map_coordinates_bloc/mapcoordinates_bloc.dart';
 import 'package:angleswing_skill_assesment/presentation/drawer/app_drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:location/location.dart';
 
 class HomeScreen extends StatefulWidget {
+  static const String route = 'map_controller_animated';
+
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() {
+    return HomeScreenState();
+  }
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  @override
+  void initState() {
+    BlocProvider.of<MapcoordinatesBloc>(context).add(GetMapCoodinates());
+    super.initState();
+  }
+
   final GlobalKey<ScaffoldState> _drawerscaffoldkey =
       GlobalKey<ScaffoldState>();
 
   MapController mapController = MapController();
   double currentZoom = 16.0;
   LatLng currentCenter = LatLng(37.56682245821738, 126.9778163539802);
+  LatLng currentLocation = LatLng(0, 0);
   bool isOpen = false;
   void _zoomOut() {
     if (currentZoom == 6) {
@@ -45,23 +60,95 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void permissionHandler() async {
+    Location location = Location();
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+  }
+//! Simple function to goto users current location
+  // Future<LatLng> getCurrentLocation() async {
+  //   permissionHandler();
+  //   Location location = Location();
+
+  //   LocationData _locationData;
+
+  //   _locationData = await location.getLocation();
+
+  //   setState(() {
+  //     //_center = LatLng(_locationData.latitude, _locationData.longitude);
+
+  //     mapController.move(
+  //         LatLng(_locationData.latitude ?? 0, _locationData.longitude ?? 0),
+  //         16.0);
+  //   });
+  //   return LatLng(_locationData.latitude ?? 0, _locationData.longitude ?? 0);
+  // }
+//! function to animate to users current location
+  Future<LatLng> _animatedMapMove() async {
+    Location location = Location();
+
+    LocationData _locationData;
+
+    _locationData = await location.getLocation();
+
+    final _latTween = Tween<double>(
+        begin: mapController.center.latitude, end: _locationData.latitude);
+    final _lngTween = Tween<double>(
+        begin: mapController.center.longitude, end: _locationData.longitude);
+    final _zoomTween = Tween<double>(begin: mapController.zoom, end: 16.0);
+
+    var controller = AnimationController(
+        duration: const Duration(milliseconds: 500), vsync: this);
+
+    Animation<double> animation =
+        CurvedAnimation(parent: controller, curve: Curves.fastOutSlowIn);
+
+    controller.addListener(() {
+      mapController.move(
+          LatLng(_latTween.evaluate(animation), _lngTween.evaluate(animation)),
+          _zoomTween.evaluate(animation));
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        controller.dispose();
+      } else if (status == AnimationStatus.dismissed) {
+        controller.dispose();
+      }
+    });
+
+    controller.forward();
+    return LatLng(_locationData.latitude ?? 0, _locationData.longitude ?? 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("MAP Demo"),
+        title: const Text("Angleswing Demo"),
         leading: IconButton(
           onPressed: () {
             if (_drawerscaffoldkey.currentState!.isDrawerOpen) {
               Navigator.pop(context);
-              setState(() {
-                isOpen = false;
-              });
             } else {
               _drawerscaffoldkey.currentState!.openDrawer();
-              setState(() {
-                isOpen = true;
-              });
             }
           },
           icon: isOpen
@@ -70,51 +157,179 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       primary: true,
-      body: Scaffold(
-        key: _drawerscaffoldkey,
-        onDrawerChanged: ((isOpened) => setState(() {
-              isOpen = isOpened;
-            })),
-        drawer: const AppDrawer(),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const SizedBox(width: 56),
-            FloatingActionButton(
-              onPressed: () {
-                _zoomOut();
-              },
-              child: const Icon(Icons.gps_fixed),
-            ),
-            FloatingActionButton(
-              onPressed: () {
-                _zoomIn();
-              },
-              child: const Icon(Icons.navigation),
-            ),
-          ],
-        ),
-        body: FlutterMap(
-          mapController: mapController,
-          options: MapOptions(
-            controller: mapController,
-            center: LatLng(37.56682245821738, 126.9778163539802),
-            zoom: currentZoom,
-            enableScrollWheel: true,
-            maxZoom: 18,
-            minZoom: 6,
-          ),
-          layers: [
-            TileLayerOptions(
-              urlTemplate: MapUrl.templteUrl,
-              additionalOptions: {
-                'accessToken': MapUrl.acceesToken,
-                'id': MapUrl.id,
-              },
-            ),
-            MarkerLayerOptions(markers: []),
-          ],
-        ),
+      body: BlocBuilder<MapcoordinatesBloc, MapcoordinatesState>(
+        builder: (context, state) {
+          if (state is MapcoordinatesLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          if (state is MappCoordinatesLoaded) {
+            return Scaffold(
+              key: _drawerscaffoldkey,
+              onDrawerChanged: ((isOpened) => setState(() {
+                    isOpen = isOpened;
+                  })),
+              drawer: AppDrawer(
+                locations: state.mapCoordinates.locations,
+              ),
+              floatingActionButton: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 56),
+                  FloatingActionButton(
+                    onPressed: () {
+                      if (currentLocation == LatLng(0, 0)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Current location not choosen yet'),
+                          ),
+                        );
+                      } else {
+                        BlocProvider.of<IspressedBloc>(context)
+                            .add(IsPressedLocation(latLng: currentLocation));
+                      }
+                    },
+                    child: const Icon(Icons.gps_fixed),
+                  ),
+                  FloatingActionButton(
+                    onPressed: () async {
+                      _animatedMapMove().then((value) {
+                        setState(() {
+                          currentLocation = value;
+                        });
+                      });
+                    },
+                    child: const Icon(Icons.navigation),
+                  ),
+                ],
+              ),
+              body: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            _zoomIn();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            elevation: 8,
+                            primary: const Color.fromARGB(255, 36, 34, 34),
+                            shape: const CircleBorder(),
+                            minimumSize: const Size(35, 35),
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            size: 15,
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            _zoomOut();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            elevation: 8,
+                            primary: const Color.fromARGB(255, 36, 34, 34),
+                            shape: const CircleBorder(),
+                            minimumSize: const Size(35, 35),
+                          ),
+                          child: const Icon(
+                            Icons.remove,
+                            size: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FlutterMap(
+                    mapController: mapController,
+                    options: MapOptions(
+                      controller: mapController,
+                      center: currentCenter,
+                      zoom: currentZoom,
+                      enableScrollWheel: true,
+                      maxZoom: 18,
+                      minZoom: 6,
+                    ),
+                    nonRotatedLayers: [
+                      TileLayerOptions(
+                        urlTemplate: MapUrl.templteUrl,
+                        additionalOptions: {
+                          'accessToken': MapUrl.acceesToken,
+                          'id': MapUrl.id,
+                        },
+                      ),
+                      MarkerLayerOptions(
+                        markers: [
+                          ...state.mapCoordinates.locations
+                              .map(
+                                (e) => Marker(
+                                  point: LatLng(e.first, e.last),
+                                  builder: (context) {
+                                    return BlocBuilder<IspressedBloc,
+                                            IspressedState>(
+                                        builder: (contex, isPressedState) {
+                                      if (isPressedState is IFPressedLocation) {
+                                        return const Icon(
+                                          Icons.push_pin,
+                                          color: Colors.red,
+                                          size: 30,
+                                        );
+                                      }
+                                      return const Icon(
+                                        Icons.push_pin,
+                                        color: Colors.red,
+                                        size: 30,
+                                      );
+                                    });
+                                  },
+                                ),
+                              )
+                              .toList(),
+                          Marker(
+                            point: currentLocation,
+                            builder: (context) {
+                              return BlocBuilder<IspressedBloc, IspressedState>(
+                                  builder: (contex, isPressedState) {
+                                if (isPressedState is IFPressedLocation) {
+                                  return Stack(
+                                    children: const [
+                                      Padding(
+                                        padding: EdgeInsets.only(top: 10.0),
+                                        child: Icon(
+                                          Icons.location_on,
+                                          color: Colors.blue,
+                                          size: 30,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.push_pin,
+                                        color: Colors.red,
+                                        size: 30,
+                                      ),
+                                    ],
+                                  );
+                                }
+                                return const Icon(
+                                  Icons.location_on,
+                                  color: Colors.blue,
+                                  size: 30,
+                                );
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }
+          return const SizedBox();
+        },
       ),
     );
   }
