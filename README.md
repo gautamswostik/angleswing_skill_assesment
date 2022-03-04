@@ -53,4 +53,4 @@ press install it'll install application in your phone. If it asks for permission
 # Versions
 
 Dart 2.16.1<br/>
-Flutter Flutter 2.10.2<br/>
+Flutter 2.10.2<br/>
