@@ -1,4 +1,4 @@
-# angleswing_skill_assesment
+# Working with flutter map
 
 A new Flutter project.
 
@@ -12,7 +12,7 @@ Firstly I installed the packages and plugins which I'm going to use most in this
 
 The main packages and plugins installed are follows
 
-1.Flutter_map - I decided to use this package because it is based on MapBox and uses MapBox api for Maps and stuffs related with map. There are many packages like google_maps which provide many more feature. But it was specified if I have used MapBox the better in requirement of Job vacancy so I decided to go with MapBox.<br/> 2. Bloc - For state management<br/> 3. Dio - For api calls<br/> 4. ohters for code generations and some other suffs<br/>
+1.Flutter_map - I decided to use this package because it is based on MapBox and uses MapBox api for Maps and stuffs related with map.<br/> 2. Bloc - For state management<br/> 3. Dio - For api calls<br/> 4. ohters for code generations and some other suffs<br/>
 
 The project is divided into 4 parts<br/> 1. App Setup<br/> 2. Application<br/> 3. Infrastructure<br/> 4. Presentation<br/>
 
